@@ -1,45 +1,34 @@
+import React from "react";
 import { Component  } from "react";
 import PropTypes from 'prop-types';
-import { StateListStyled, StateElStyled, BtnListStyled, BtnStyled } from "./feedback.styled";
-
-
-const Btn = ({stateKey, onAddStat}) => {
-    
-    
-    return (
-   
-//    <BtnStyled onClick={() => onAddStat({el})}>{el}</BtnStyled>
-   <button onClick={() => onAddStat({stateKey})}>{stateKey}</button>
-)}
-
-
+import { Statistics } from "./Statistics";
+import { FeedbackOptions } from "./FeedbackOptions";
+import { Section } from "./Section";
+import { Notification } from "./Notification";
 
 
 export class Feedback extends Component {
     state = {
-        good: 10,
+        good: 0,
         neutral: 0,
         bad: 0
       }
 
-      addRate = ({stateKey}) => {
-        
+
+      onLeaveFeedback = (stateKey) => {
         this.setState(prevState => {
-            console.log('prevState :>> ', prevState);  //{good: 10, neutral: 0, bad: 0}
-            console.log('stateKey :>> ', stateKey);  //good
-            console.log('prevState.stateKey :>> ', prevState.stateKey);  // undefined ???
             return ({
-                [stateKey]: prevState.stateKey + 1
+                [stateKey]: prevState[stateKey] + 1
              })}
              )
       }
 
-      countTotalFeedback() {
-        return Object.values(this.state).reduce((acc, number) => {
+      countTotalFeedback = () => (
+        Object.values(this.state).reduce((acc, number) => {
             return acc + number}, 0)
-       }
+      )
 
-      countPositiveFeedbackPercentage() {
+      countPositiveFeedbackPercentage= () => {
         const factor = this.countTotalFeedback() / this.state.good;
         return `${(Math.round(100 / factor))}%`
       }
@@ -47,30 +36,47 @@ export class Feedback extends Component {
       render() {
         return (
             <>
-            <h3>Please leave feedback</h3>
-            
-            <BtnListStyled>
-                {Object.keys(this.state).map(stateKey => (
-                    <Btn key={stateKey} stateKey={stateKey} onAddStat={this.addRate}/>
-                ))
-                }
-            </BtnListStyled>
-            <p>Statistics</p>
-            <StateListStyled>
-                {Object.entries(this.state).map(el => (
-                    <StateElStyled key={el[0]}>
-                        {el[0]}: {el[1]}
-                    </StateElStyled>
-                ))
-                }
-            </StateListStyled>
-            <p>Total: {this.countTotalFeedback()}</p>
-            <p>Positive feedback: {this.countPositiveFeedbackPercentage()}</p>
+            <Section title="Please leave feedback">
+                
+                <FeedbackOptions  ackOptions 
+                    options={this.state} 
+                    onLeaveFeedback={this.onLeaveFeedback} />
 
+                {Object.values(this.state).some(e => e > 0)
+                    ? <Statistics 
+                    allStates={this.state} 
+                    total={this.countTotalFeedback()} 
+                    positivePercentage={this.countPositiveFeedbackPercentage()} />
+                    : <Notification message="There is no feedback"/>
+            
+            
+            }
+                
+
+                
+                
+            </Section>
             </>
         )
       }
 
       
 
+}
+
+
+
+Section.propTypes = {
+    title: PropTypes.string
+}
+
+FeedbackOptions.propTypes = {
+    options: PropTypes.object,
+    onLeaveFeedback: PropTypes.func
+}
+
+Statistics.propTypes = {
+    allStates: PropTypes.object,
+    total: PropTypes.number,
+    positivePercentage: PropTypes.string
 }
